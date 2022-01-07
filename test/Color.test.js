@@ -16,7 +16,6 @@ contract('Color', (accounts) => {
     describe('deployment', async() => {
         it('deploys successfully', async() => {
             const address =  contract.address
-            console.log(address)
             assert.notEqual(address, 0x0)
             assert.notEqual(address, '')
             assert.notEqual(address, null)
@@ -32,7 +31,47 @@ contract('Color', (accounts) => {
             const symbol = await  contract.symbol()
             assert.equal(symbol, 'COLORS')
         })
+        
 
+    })
+
+    describe('minting', async() => {
+
+        it('creates a new token', async() => {
+            const result = await contract.mint('#EC058E')
+            const totalSupply = await contract.totalSupply()
+            // success
+            assert.equal(totalSupply, 1)
+            const event = result.logs[0].args
+            assert.equal(event.tokenId.toNumber(), 1, 'id is correct')
+            assert.equal(event.from, '0x0000000000000000000000000000000000000000', 'from is correct')
+            assert.equal(event.to, accounts[0], 'to is correct')
+
+            // failure
+            await contract.mint('#EC058E').should.be.rejected
+        })
+    })
+
+    describe('indexing', async() => {
+        it('lists colors', async() => {
+            // mint 3 more tokens
+            await contract.mint('#5386E4')
+            await contract.mint('#FFFFFF')
+            await contract.mint('#000000')
+            const totalSupply = await contract.totalSupply()
+            
+            let color 
+            let results = []
+
+            for(var i= 1; i <= totalSupply; i++){
+                color = await contract.colors(i - 1)
+                results.push(color)
+            }
+            
+            let expected = ['#EC058E','#5386E4', '#FFFFFF', '#000000']
+            assert.equal(results.join(','), expected.join(','))
+
+        })
     })
 
 })
